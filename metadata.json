@@ -1,0 +1,8 @@
+{
+  "name": "gswmii",
+  "description": "WMII like tiling manager for gnome shell",
+  "settings-schema": "org.gnome.shell.extensions.gswmii",
+  "shell-version": ["3.28"],
+  "url": "https://github.com/rvadim/gswmii",
+  "uuid": "gswmii@vadim.reyder@gmail.com"
+}
