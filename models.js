@@ -9,10 +9,6 @@ class Column {
         this._layout = LAYOUT_DEFAULT;
     }
 
-    // getPosition() {
-    //     return this._position;
-    // }
-
     getWindows() {
         return this._windows;
     }
@@ -34,7 +30,7 @@ class Column {
             return win_id;
         }
         if (index === 0) {
-            return 0;
+            return win_id;
         }
         return this._windows[index-1];
     }
@@ -64,6 +60,28 @@ class Monitor {
         this._parent_ws = ws;
         this._columns.push(new Column());
         this.updateMonitorSize();
+    }
+
+    getNext(col) {
+        let index = this._columns.indexOf(col);
+        if (index === -1) {
+            return col;
+        }
+        if (index >= this._columns.length-1) {
+            return col;
+        }
+        return this._columns[index+1];
+    }
+
+    getPrevious(col) {
+        let index = this._columns.indexOf(col);
+        if (index === -1) {
+            return col;
+        }
+        if (index === 0) {
+            return col;
+        }
+        return this._columns[index-1];
     }
 
     getWindowColumn(win_id) {
@@ -106,25 +124,22 @@ class Monitor {
 
     getColumn(position) {
         return this._columns[position];
-        // for (let col of this._columns) {
-        //     if (col.getPosition() === position) {
-        //         return col
-        //     }
-        // }
-        // return null;
     }
 
-    // hasColumn(column) {
-    //     for (let c of this._columns) {
-    //         if (c.getPosition() === column.getPosition()) {
-    //             return true;
-    //         }
-    //     }
-    //     return false;
-    // }
+    removeColumn(column) {
+        this._columns.splice(this._columns.indexOf(column), 1);
+    }
 
     getParentWS() {
         return this._parent_ws;
+    }
+
+    getWindowById(id) {
+        let windows = this.getParentWS().list_windows().filter(win => win.get_stable_sequence() === id);
+        if (windows.length > 0) {
+            return windows[0];
+        }
+        return null;
     }
 }
 

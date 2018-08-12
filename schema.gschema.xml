@@ -99,6 +99,16 @@
       <summary>Switch focus up</summary>
       <description>Switch focus up</description>
     </key>
+    <key name="switch-focus-right" type="as">
+      <default>['&lt;Mod1&gt;l']</default>
+      <summary>Switch focus right</summary>
+      <description>Switch focus right</description>
+    </key>
+      <key name="switch-focus-left" type="as">
+      <default>['&lt;Mod1&gt;h']</default>
+      <summary>Switch focus left</summary>
+      <description>Switch focus left</description>
+    </key>
     <key name="move-window-right" type="as">
       <default>['&lt;Mod1&gt;&lt;Shift&gt;l']</default>
       <summary>Switch focus up</summary>

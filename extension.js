@@ -47,20 +47,10 @@ function getFocusedWindow() {
 
 function switch_default_layout() {
     log('switch-default-layout');
-    // let window = getFocusedWindow();
-    // _column_properties[get_column_hash(window, getWindowColumn(window))] = LAYOUT_DEFAULT;
-    // print_column_structure(_column_properties);
 }
 
 function switch_stacked_layout() {
     log('switch-stacked-layout');
-    // let window = getFocusedWindow();
-    // _column_properties[get_column_hash(window, getWindowColumn(window))] = LAYOUT_STACKED;
-    // print_column_structure(_column_properties);
-}
-
-function getWindowbyId(ws, id) {
-    return ws.list_windows().filter(win => win.get_stable_sequence() === id)[0];
 }
 
 function retile(monitor) {
@@ -74,13 +64,12 @@ function retile(monitor) {
         let row_height = Math.floor(monitor.getHeight() / windows_count);
         let win_id = 0;
         for (let id of windows) {
-            let win = getWindowbyId(monitor.getParentWS(), id);
-            // TODO
-            // if (!isTileable(win)){
-            //     continue;
-            // }
+            let win = monitor.getWindowById(id);
+            if (!isTileable(win)){
+                 continue;
+            }
             if (columns_count === 1 && windows_count === 1) {
-               win.maximize(Meta.MaximizeFlags.BOTH)
+               win.maximize(Meta.MaximizeFlags.BOTH);
             } else {
                 win.unmaximize(Meta.MaximizeFlags.BOTH);
                 win.move_resize_frame(false,
@@ -96,16 +85,11 @@ function retile(monitor) {
     }
 }
 
-function cleanup_windows(workspace, monitor) {
-    for (let col of monitor.getColumns()) {
-        for (let win of col.getWindows()) {
-
-        }
-    }
-}
-
 function update_monitor(monitor) {
     for (let win of monitor.getParentWS().list_windows()) {
+        if (!isTileable(win)){
+            continue;
+        }
         let win_id = win.get_stable_sequence();
         let col = monitor.getWindowColumn(win_id);
         if (col === null) {
@@ -144,64 +128,91 @@ function update_workspace(workspace) {
 
 function switch_focus_down() {
     let win = getFocusedWindow();
-    let win_id =win.get_stable_sequence();
-    let ws = inventory.getWorkspace(win.get_workspace().index());
-    let mon = ws.getMonitor(win.get_monitor());
-    let columns = mon.getColumns();
-    let new_id = null;
-    for (let col of columns) {
-        if (col.hasWindow(win_id)) {
-            new_id = col.getNext(win_id);
-        }
-    }
-    if (new_id !== null) {
-        getWindowbyId(win.get_workspace(), new_id).focus(global.get_current_time());
-    }
+    let win_id = win.get_stable_sequence();
+    let mon = inventory.getWorkspace(win.get_workspace().index()).getMonitor(win.get_monitor());
+    let col = mon.getWindowColumn(win_id);
+    mon.getWindowById(col.getNext(win_id)).focus(global.get_current_time());
 }
 
 function switch_focus_up() {
     let win = getFocusedWindow();
-    let win_id =win.get_stable_sequence();
-    let ws = inventory.getWorkspace(win.get_workspace().index());
-    let mon = ws.getMonitor(win.get_monitor());
-    let columns = mon.getColumns();
-    let new_id = null;
-    for (let col of columns) {
-        if (col.hasWindow(win_id)) {
-            new_id = col.getPrevious(win_id);
-        }
-    }
-    if (new_id !== null) {
-        getWindowbyId(win.get_workspace(), new_id).focus(global.get_current_time());
-    }
+    let win_id = win.get_stable_sequence();
+    let mon = inventory.getWorkspace(win.get_workspace().index()).getMonitor(win.get_monitor());
+    let col = mon.getWindowColumn(win_id);
+    mon.getWindowById(col.getPrevious(win_id)).focus(global.get_current_time());
 }
 
 function move_window_right() {
-    // TODO case: move to existed
-    // TODO case: delete in existed
     let win = getFocusedWindow();
     let win_id = win.get_stable_sequence();
     let ws = inventory.getWorkspace(win.get_workspace().index());
     let mon = ws.getMonitor(win.get_monitor());
-    let columns = mon.getColumns();
-    for (let i = 0; i < columns.length; i++) {
-        let current_col = columns[i];
-        if (current_col.hasWindow(win_id)) {
-            if (current_col.getWindows().length === 1) {
-                // Do nothing when this is last window in column
-                // TODO remove column, move window?
-                break;
-            }
-            if (i === columns.length - 1) {
-                // Last column, add new and push win_id to it, remove from current_col
-                let new_col = new Models.Column();
-                current_col.removeWindow(win_id);
-                new_col.addWindow(win_id);
-                mon.addColumn(new_col);
-                retile(mon);
-            }
-        }
+    let col = mon.getWindowColumn(win_id);
+    if (col.getWindows().length === 1) {
+        // Do nothing when this is last window in column
+        // TODO remove column, move window?
+        return;
     }
+    let next_col = mon.getNext(col);
+    if (col === next_col) {
+        // Last column, add new and push win_id to it, remove from current_col
+        let new_col = new Models.Column();
+        new_col.addWindow(win_id);
+        mon.addColumn(new_col);
+    } else {
+        next_col.addWindow(win_id);
+    }
+
+    col.removeWindow(win_id);
+    retile(mon);
+}
+
+function move_window_left() {
+    let win = getFocusedWindow();
+    let win_id = win.get_stable_sequence();
+    let ws = inventory.getWorkspace(win.get_workspace().index());
+    let mon = ws.getMonitor(win.get_monitor());
+
+    let col = mon.getWindowColumn(win_id);
+
+    let prev_col = mon.getPrevious(col);
+    if (col === prev_col) {
+        // Nothing to do last column
+        return;
+    } else {
+        prev_col.addWindow(win_id);
+    }
+    col.removeWindow(win_id);
+    if (col.getWindows().length === 0) {
+        mon.removeColumn(col);
+    }
+    retile(mon);
+}
+
+function switch_focus_right() {
+    let win = getFocusedWindow();
+    let win_id = win.get_stable_sequence();
+    let ws = inventory.getWorkspace(win.get_workspace().index());
+    let mon = ws.getMonitor(win.get_monitor());
+    let col = mon.getWindowColumn(win_id);
+    let new_col = mon.getNext(col);
+    if (col === new_col) {
+        return;
+    }
+    mon.getWindowById(new_col.getWindows()[0]).focus(global.get_current_time());
+}
+
+function switch_focus_left() {
+    let win = getFocusedWindow();
+    let win_id = win.get_stable_sequence();
+    let ws = inventory.getWorkspace(win.get_workspace().index());
+    let mon = ws.getMonitor(win.get_monitor());
+    let col = mon.getWindowColumn(win_id);
+    let new_col = mon.getPrevious(col);
+    if (col === new_col) {
+        return;
+    }
+    mon.getWindowById(new_col.getWindows()[0]).focus(global.get_current_time());
 }
 
 
@@ -212,9 +223,6 @@ function update_inventory() {
     }
 }
 
-function rebuild() {
-    update_inventory();
-}
 
 function remove_window(win) {
     let win_id = win.get_stable_sequence();
@@ -225,9 +233,16 @@ function remove_window(win) {
             let col = monitors[mon_id].getWindowColumn(win_id);
             if (col !== null) {
                 col.removeWindow(win_id);
+                if (col.getWindows().length === 0) {
+                    monitors[mon_id].removeColumn(col);
+                }
             }
         }
     }
+}
+
+function rebuild() {
+    update_inventory();
 }
 
 function enable() {
@@ -252,12 +267,19 @@ function enable() {
     addKeybinding('switch-focus-up', () => {
         switch_focus_up();
     });
+    addKeybinding('switch-focus-right', () => {
+        switch_focus_right();
+    });
+    addKeybinding('switch-focus-left', () => {
+        switch_focus_left();
+    });
     addKeybinding('move-window-right', () => {
         move_window_right();
     });
     addKeybinding('move-window-left', () => {
-        switch_focus_up();
+        move_window_left();
     });
+
 
     rebuild();
 }
@@ -275,5 +297,5 @@ function disable() {
     Main.wm.removeKeybinding('switch-focus-up');
     Main.wm.removeKeybinding('move-window-right');
     Main.wm.removeKeybinding('move-window-left');
-    inventory = null;
+    // inventory = null;
 }
