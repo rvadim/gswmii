@@ -1,12 +1,37 @@
 const Main = imports.ui.main;
 
+function log(message, prefix = null) {
+    if (prefix === null) {
+        global.log('gswmii: ' + JSON.stringify(message));
+    } else {
+        global.log('gswmii [' + prefix + ']: ' + JSON.stringify(message));
+    }
+}
+
 const LAYOUT_DEFAULT = 0;
 const LAYOUT_STACKED = 1;
 
 class Column {
     constructor() {
         this._windows = [];
-        this._layout = LAYOUT_DEFAULT;
+        this._layout = LAYOUT_STACKED;
+        this._current = null;
+    }
+
+    getCurrent() {
+        return this._current;
+    };
+
+    setCurrent(win_id) {
+        this._current = win_id;
+    }
+
+    getLayout() {
+        return this._layout;
+    }
+
+    setLayout(layout) {
+        this._layout = layout;
     }
 
     getWindows() {
@@ -36,6 +61,7 @@ class Column {
     }
 
     addWindow(id) {
+        this.setCurrent(id);
         this._windows.push(id);
     }
 
@@ -49,6 +75,7 @@ class Column {
     }
 
     removeWindow(id) {
+        this.setCurrent(this.getPrevious(id));
         this._windows.splice(this._windows.indexOf(id), 1);
     }
 }
@@ -123,11 +150,22 @@ class Monitor {
     }
 
     getColumn(position) {
+        // TODO remove this workaround
+        if (this._columns.length === 0) {
+            let column = new Column();
+            this.addColumn(column);
+        }
         return this._columns[position];
     }
 
     removeColumn(column) {
         this._columns.splice(this._columns.indexOf(column), 1);
+        // TODO remove this workaround
+        let temp = [];
+        for (let w of this._columns) {
+            temp.push(w);
+        }
+        this._columns = temp;
     }
 
     getParentWS() {
@@ -140,6 +178,23 @@ class Monitor {
             return windows[0];
         }
         return null;
+    }
+
+    removeWindowById(id) {
+        let col = this.getWindowColumn(id);
+        col.removeWindow(id);
+    }
+
+    printStructure() {
+        let output = 'ws: ' + this.getParentWS().index() + ' = ';
+        for (let col of this.getColumns()) {
+            output += ' {' + col.getLayout() + '} [ ';
+            for (let win of col.getWindows()) {
+                output += ' <' + win + '> ';
+            }
+            output += ' ] ';
+        }
+        log(output, 'structure');
     }
 }
 
@@ -196,3 +251,5 @@ class Inventory {
         return this._workspaces;
     }
 }
+
+

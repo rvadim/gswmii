@@ -19,11 +19,11 @@ const bindings = new Gio.Settings({
 
 let inventory = new Models.Inventory();
 
-
 let _handle_settings;
 let _handle_screen;
 let _handle_wm_map;
 let _handle_wm_destroy;
+let _handle_wm_switch_ws;
 
 function isTileable(win) {
     return settings.get_strv('auto-tile-window-types').some(t => win.window_type === Meta.WindowType[t]);
@@ -47,10 +47,22 @@ function getFocusedWindow() {
 
 function switch_default_layout() {
     log('switch-default-layout');
+    let win = getFocusedWindow();
+    let win_id = win.get_stable_sequence();
+    let mon = inventory.getWorkspace(win.get_workspace().index()).getMonitor(win.get_monitor());
+    let col = mon.getWindowColumn(win_id);
+    col.setLayout(Models.LAYOUT_DEFAULT);
+    // col.setCurrent(win_id);
+    retile(mon);
 }
 
 function switch_stacked_layout() {
-    log('switch-stacked-layout');
+    let win = getFocusedWindow();
+    let win_id = win.get_stable_sequence();
+    let mon = inventory.getWorkspace(win.get_workspace().index()).getMonitor(win.get_monitor());
+    let col = mon.getWindowColumn(win_id);
+    col.setLayout(Models.LAYOUT_STACKED);
+    retile(mon);
 }
 
 function retile(monitor) {
@@ -62,27 +74,56 @@ function retile(monitor) {
         let windows = column.getWindows();
         let windows_count = windows.length;
         let row_height = Math.floor(monitor.getHeight() / windows_count);
-        let win_id = 0;
-        for (let id of windows) {
-            let win = monitor.getWindowById(id);
-            if (!isTileable(win)){
-                 continue;
+        if (column.getLayout() === Models.LAYOUT_DEFAULT) {
+            for (let id of windows) {
+                let win = monitor.getWindowById(id);
+                if (win === null) {
+                    monitor.removeWindowById(id);
+                    continue
+                }
+                if (!isTileable(win)) {
+                    continue
+                }
+                if (id === column.getCurrent()) {
+                    win.maximize(Meta.MaximizeFlags.BOTH);
+                    win.unmaximize(Meta.MaximizeFlags.BOTH);
+                    win.move_resize_frame(false,
+                        col_id * column_width,
+                        row_height,
+                        column_width - 2,
+                        row_height - 2);
+                } else {
+                   win.minimize();
+                }
             }
-            if (columns_count === 1 && windows_count === 1) {
-               win.maximize(Meta.MaximizeFlags.BOTH);
-            } else {
-                win.unmaximize(Meta.MaximizeFlags.BOTH);
-                win.move_resize_frame(false,
-                    col_id * column_width,
-                    win_id * row_height,
-                    column_width - 2,
-                    row_height - 2 );
+        } else if (column.getLayout() === Models.LAYOUT_STACKED) {
+            let win_id = 0;
+            for (let id of windows) {
+                let win = monitor.getWindowById(id);
+                if (win === null) {
+                    monitor.removeWindowById(id);
+                    continue
+                }
+                if (!isTileable(win)) {
+                    continue;
+                }
+                if (columns_count === 1 && windows_count === 1) {
+                    win.maximize(Meta.MaximizeFlags.BOTH);
+                } else {
+                    win.unmaximize(Meta.MaximizeFlags.BOTH);
+                    win.move_resize_frame(false,
+                        col_id * column_width,
+                        win_id * row_height,
+                        column_width - 2,
+                        row_height - 2);
+                }
+                // log('x=' + col_id*column_width + ', y='+ win_id * row_height + ', width=' + column_width + ', height=' + row_height + ', windows=' + column.getWindows().length);
+                win_id++;
             }
-            // log('x=' + col_id*column_width + ', y='+ win_id * row_height + ', width=' + column_width + ', height=' + row_height + ', windows=' + column.getWindows().length);
-            win_id++;
         }
         col_id++;
     }
+    monitor.printStructure();
 }
 
 function update_monitor(monitor) {
@@ -215,14 +256,12 @@ function switch_focus_left() {
     mon.getWindowById(new_col.getWindows()[0]).focus(global.get_current_time());
 }
 
-
 function update_inventory() {
     let ws_count = global.screen.get_n_workspaces();
     for (let i = 0; i < ws_count; i++) {
         update_workspace(global.screen.get_workspace_by_index(i));
     }
 }
-
 
 function remove_window(win) {
     let win_id = win.get_stable_sequence();
@@ -236,6 +275,7 @@ function remove_window(win) {
                 if (col.getWindows().length === 0) {
                     monitors[mon_id].removeColumn(col);
                 }
+                retile(monitors[mon_id]);
             }
         }
     }
@@ -246,9 +286,18 @@ function rebuild() {
 }
 
 function enable() {
-    _handle_settings = settings.connect('changed', rebuild);
-    _handle_screen = global.screen.connect('restacked', rebuild);
-    // global.window_manager.connect('switch-workspace', rebuild);
+    //TODO move window to different workspace
+    _handle_settings = settings.connect('changed', function() {
+        log('setting changed');
+        rebuild();
+    });
+    _handle_screen = global.screen.connect('restacked', function() {
+        log('restacked');
+        rebuild();
+    });
+    _handle_wm_switch_ws = global.window_manager.connect('switch-workspace', function() {
+        rebuild();
+    });
     _handle_wm_map = global.window_manager.connect('map', (g, w) => {
         rebuild();
     });
@@ -279,8 +328,6 @@ function enable() {
     addKeybinding('move-window-left', () => {
         move_window_left();
     });
-
-
     rebuild();
 }
 
@@ -291,10 +338,13 @@ function disable() {
     global.screen.disconnect(_handle_screen);
     global.window_manager.disconnect(_handle_wm_map);
     global.window_manager.disconnect(_handle_wm_destroy);
+    global.window_manager.disconnect(_handle_wm_switch_ws);
     Main.wm.removeKeybinding('switch-default-layout');
     Main.wm.removeKeybinding('switch-stacked-layout');
     Main.wm.removeKeybinding('switch-focus-down');
     Main.wm.removeKeybinding('switch-focus-up');
+    Main.wm.removeKeybinding('switch-focus-right');
+    Main.wm.removeKeybinding('switch-focus-left');
     Main.wm.removeKeybinding('move-window-right');
     Main.wm.removeKeybinding('move-window-left');
     // inventory = null;
