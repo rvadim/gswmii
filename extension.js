@@ -45,7 +45,7 @@ function enable() {
     });
     enableKeybindings();
 
-    MyMain.update(true);
+    MyMain.update();
 }
 
 function init() {}
@@ -80,21 +80,21 @@ function enableKeybindings() {
     // addKeybinding('switch-focus-left', () => {
     //     switch_focus_left();
     // });
-    // addKeybinding('move-window-right', () => {
-    //     move_window_right();
-    // });
-    // addKeybinding('move-window-left', () => {
-    //     move_window_left();
-    // });
+    addKeybinding('move-window-right', () => {
+        MyMain.move_window_right();
+    });
+    addKeybinding('move-window-left', () => {
+        MyMain.move_window_left();
+    });
 }
 
 function disableKeybindings() {
     Main.wm.removeKeybinding('switch-focus-down');
     Main.wm.removeKeybinding('switch-focus-up');
+    Main.wm.removeKeybinding('move-window-left');
+    Main.wm.removeKeybinding('move-window-right');
     // Main.wm.removeKeybinding('switch-default-layout');
     // Main.wm.removeKeybinding('switch-stacked-layout');
     // Main.wm.removeKeybinding('switch-focus-right');
     // Main.wm.removeKeybinding('switch-focus-left');
-    // Main.wm.removeKeybinding('move-window-right');
-    // Main.wm.removeKeybinding('move-window-left');
 }

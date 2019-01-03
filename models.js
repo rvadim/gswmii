@@ -30,6 +30,16 @@ class Window {
         }
         return false
     }
+
+    copy() {
+        let copy = new Window(this.ref);
+        copy.id = this.id;
+        copy.ws_id = this.ws_id;
+        copy.mon_id = this.mon_id;
+        copy.col_id = this.col_id;
+        copy.in_col_id = this.in_col_id;
+        return copy;
+    }
 }
 
 class Structure {
@@ -39,12 +49,22 @@ class Structure {
     }
 
     addWindow(win) {
+        return new Promise((resolve, reject) => {
         // Utils.log("Structure", this.uuid, "add window", win.id);
-        this.windows[win.id] = win
+        this.windows[win.id] = win;
+        });
+    }
+
+    setWindow(win) {
+        return new Promise((resolve, reject) => {
+            this.windows[win.id] = win;
+        });
     }
 
     deleteWindow(win) {
-        delete this.windows[win.id]
+        return new Promise((resolve, reject) => {
+            delete this.windows[win.id];
+        });
     }
 
     getWindow(id) {
