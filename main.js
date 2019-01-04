@@ -26,7 +26,7 @@ function update(win=false) {
             let newWin = newStruct[i];
             if (!structure.hasWindow(i)) {
                 Handlers.windowCreated(newWin, structure, newStruct);
-            } else if (!structure.getWindow(i).equal(newWin)) {
+            } else if (newWin.col_id !== null && !structure.getWindow(i).equal(newWin)) {
                 Handlers.windowUpdated(structure.getWindow(i), newWin, structure, newStruct);
             }
             retileScreen(newWin.ws_id, newWin.mon_id);
@@ -50,6 +50,7 @@ function build(win=false) {
 }
 
 function retileScreen(ws_id, mon_id) {
+    // Utils.log(`Retile ws ${ws_id}, mon ${mon_id}`);
     let top_height = 25;        // TODO get from original window
     let columns = structure.getColumns(ws_id, mon_id);
     let monitor = Utils.getMonitor(mon_id);
@@ -91,6 +92,17 @@ function switch_focus_down() {
     let win = structure.getWindow(Utils.getFocusedWindow().get_stable_sequence());
     structure.getNextInColumn(win).ref.focus(global.get_current_time());
 }
+
+function switch_focus_left() {
+    let win = structure.getWindow(Utils.getFocusedWindow().get_stable_sequence());
+    structure.getLeftWindow(win).ref.focus(global.get_current_time());
+}
+
+function switch_focus_right() {
+    let win = structure.getWindow(Utils.getFocusedWindow().get_stable_sequence());
+    structure.getRightWindow(win).ref.focus(global.get_current_time());
+}
+
 
 function move_window_right() {
     let win = structure.getWindow(Utils.getFocusedWindow().get_stable_sequence());

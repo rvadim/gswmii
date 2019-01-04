@@ -5,6 +5,7 @@ const Main = imports.ui.main;
 const St = imports.gi.St;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const MyMain = Me.imports.main;
+const Tests = Me.imports.tests;
 
 const SchemaSource = Gio.SettingsSchemaSource.new_from_directory(
     Me.dir.get_path(), Gio.SettingsSchemaSource.get_default(), false);
@@ -28,6 +29,8 @@ let _handle_wm_destroy;
 let _handle_wm_switch_ws;
 
 function enable() {
+    Tests.runTests();
+
     _handle_settings = settings.connect('changed', function() {
         MyMain.update();
     });
@@ -74,12 +77,12 @@ function enableKeybindings() {
     addKeybinding('switch-focus-up', () => {
         MyMain.switch_focus_up();
     });
-    // addKeybinding('switch-focus-right', () => {
-    //     switch_focus_right();
-    // });
-    // addKeybinding('switch-focus-left', () => {
-    //     switch_focus_left();
-    // });
+    addKeybinding('switch-focus-right', () => {
+        MyMain.switch_focus_right();
+    });
+    addKeybinding('switch-focus-left', () => {
+        MyMain.switch_focus_left();
+    });
     addKeybinding('move-window-right', () => {
         MyMain.move_window_right();
     });
@@ -93,8 +96,8 @@ function disableKeybindings() {
     Main.wm.removeKeybinding('switch-focus-up');
     Main.wm.removeKeybinding('move-window-left');
     Main.wm.removeKeybinding('move-window-right');
+    Main.wm.removeKeybinding('switch-focus-right');
+    Main.wm.removeKeybinding('switch-focus-left');
     // Main.wm.removeKeybinding('switch-default-layout');
     // Main.wm.removeKeybinding('switch-stacked-layout');
-    // Main.wm.removeKeybinding('switch-focus-right');
-    // Main.wm.removeKeybinding('switch-focus-left');
 }

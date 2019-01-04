@@ -3,7 +3,7 @@ const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Utils = Me.imports.utils;
 
 function windowCreated(window, struct, new_data) {
-    Utils.log("Window created", window.id);
+    // Utils.log("Window creating...", window.id);
     //let columns = new_struct.getWindowsByColumns(window.ws_id, window.mon_id);
     //let windows = new_struct.getWindows(window.ws_id, window.mon_id);
     // skip, get selected window
@@ -12,6 +12,7 @@ function windowCreated(window, struct, new_data) {
     //let fID = Utils.getFocusedWindow().get_stable_sequence();
     //Utils.log("fID", fID);
     //let fWin = struct.getWindow(fID);
+    window.col_id = 0;
     let windows = struct.getColumnNeighbors(window);
     window.in_col_id = windows.length;
     // if (windows.length > 0) {
@@ -27,6 +28,7 @@ function windowCreated(window, struct, new_data) {
     // struct.addWindow(window);
     //retileScreen(window.ws_id, window.mon_id, Utils.getMonitor(window.mon_id));
     struct.addWindow(window);
+    Utils.log("Window created", window.id);
 }
 
 function windowDeleted(window, struct, new_struct) {
@@ -96,8 +98,8 @@ function movingRight(old, win, struct) {
         return;
     }
 
-    if (win.in_col_id >= windows.length) {
-        win.in_col_id = windows.length;
+    if (win.in_col_id >= new_wins.length) {
+        win.in_col_id = new_wins.length;
         struct.setWindow(win);
         reorderInColumn(old_wins);
         return;
@@ -105,11 +107,6 @@ function movingRight(old, win, struct) {
 
     reorderInColumn(new_wins);
 
-    // for (let w of windows) {
-    //    if (win.in_col_id > w.in_col_id) {
-    //        w.in_col_id += 1;
-    //    }
-    // }
     struct.setWindow(win);
 }
 

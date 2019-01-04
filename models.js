@@ -7,16 +7,8 @@ class Window {
         this.ref = window;
         this.ws_id = window.get_workspace().index();
         this.mon_id = window.get_monitor();
-        this.col_id = 0;
+        this.col_id = null;
         this.in_col_id = null;
-    }
-
-    toString() {
-        return '<id:' + this.id +
-            ', ws_id:' + this.ws_id +
-            ', mon_id:' + this.mon_id +
-            ', col_id:' + this.col_id +
-            ', in_col_id:' + this.in_col_id + '>';
     }
 
     equal(win) {
@@ -45,13 +37,14 @@ class Window {
 class Structure {
     constructor() {
         this.windows = {};
-        this.uuid = Utils.guid();
+        // this.uuid = Utils.guid();
     }
 
     addWindow(win) {
         return new Promise((resolve, reject) => {
         // Utils.log("Structure", this.uuid, "add window", win.id);
-        this.windows[win.id] = win;
+            this.windows[win.id] = win;
+            resolve();
         });
     }
 
@@ -78,6 +71,14 @@ class Structure {
         return this.windows.hasOwnProperty(id);
     }
 
+    getMaxColID() {
+        let l = this.map((w) => w.col_id);
+        if (l.length === 0) {
+            return 0;
+        }
+        return Math.max(...l);
+    }
+
     getWindows(ws_id, mon_id) {
         let windows = [];
         for (let i in this.windows) {
@@ -91,19 +92,38 @@ class Structure {
         return windows;
     }
 
-    getColumns(ws_id, mon_id) {
-        let columns = [];
+    map(f) {
+        let output = [];
         for (let i in this.windows) {
             if (this.windows.hasOwnProperty(i)) {
-                let win = this.windows[i];
-                if (win.mon_id === mon_id && win.ws_id === ws_id) {
-                    if (!columns.hasOwnProperty(win.col_id)) {
-                        columns[win.col_id] = [];
-                    }
-                    columns[win.col_id][win.in_col_id] = win;
+                output.push(f(this.windows[i]));
+            }
+        }
+        return output;
+    }
+
+    filter(f) {
+        let output = [];
+        for (let i in this.windows) {
+            if (this.windows.hasOwnProperty(i)) {
+                if (f(this.windows[i])) {
+                    output.push(this.windows[i]);
                 }
             }
         }
+        return output;
+    }
+
+    getColumns(ws_id, mon_id) {
+        let columns = [];
+        this.map(function (win) {
+            if (win.mon_id === mon_id && win.ws_id === ws_id) {
+                if (!columns.hasOwnProperty(win.col_id)) {
+                    columns[win.col_id] = [];
+                }
+                columns[win.col_id][win.in_col_id] = win;
+            }
+        });
         return columns;
     }
 
@@ -112,6 +132,9 @@ class Structure {
             return win;
         }
         let column = this.getColumnNeighbors(win);
+        if (column.length === 1) {
+            return win;
+        }
         for (let w of column) {
             if (w.in_col_id === win.in_col_id - 1) {
                 return w;
@@ -123,6 +146,9 @@ class Structure {
 
     getNextInColumn(win) {
         let column = this.getColumnNeighbors(win);
+        if (column.length === 1) {
+            return win;
+        }
         if (win.in_col_id >= column.length-1) {
             return win;
         }
@@ -135,16 +161,52 @@ class Structure {
         return win;
     }
 
-    getColumnNeighbors(w) {
-        let windows = [];
-        for (let i in this.windows) {
-            if (this.windows.hasOwnProperty(i)) {
-                let win = this.windows[i];
-                if (win.mon_id === w.mon_id && win.ws_id === w.ws_id && win.col_id === w.col_id) {
-                    windows.push(win);
-                }
-            }
-        }
-        return windows;
+    getColumnNeighbors(win) {
+        return this.filter((w) => win.mon_id === w.mon_id && win.ws_id === w.ws_id && win.col_id === w.col_id);
     }
+
+    getLeftWindow(win) {
+        if (win.col_id === 0) {
+            return win
+        }
+        let windows = this.getColumns(win.ws_id, win.mon_id)[win.col_id-1];
+        let in_col_id = closest(win.in_col_id, windows.map((w) => w.in_col_id));
+        let wins = windows.filter((w) => w.in_col_id === in_col_id);
+        if (wins.length === 0) {
+            return win;
+        } else {
+            return wins[0];
+        }
+    }
+
+    getRightWindow(win) {
+        if (win.col_id === this.getMaxColID()) {
+            return win
+        }
+        let windows = this.getColumns(win.ws_id, win.mon_id)[win.col_id+1];
+        let in_col_id = closest(win.in_col_id, windows.map((w) => w.in_col_id));
+        let wins = windows.filter((w) => w.in_col_id === in_col_id);
+        if (wins.length === 0) {
+            return win;
+        } else {
+            return wins[0];
+        }
+    }
+}
+
+function closest(x, list) {
+    if (list.length === 0) {
+        return 0;
+    }
+    if (list.includes(x)) {
+        return x
+    }
+    let zip = list.map((n) => [n, Math.abs(n - x)]);
+    let closest = zip[0];
+    for (let n of zip) {
+        if (n[1] < closest[1]) {
+            closest = n;
+        }
+    }
+    return closest[0];
 }
