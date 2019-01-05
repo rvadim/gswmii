@@ -1,4 +1,7 @@
 const Main = imports.ui.main;
+const Meta = imports.gi.Meta;
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const Ext = Me.imports.extension;
 
 function omap(object, mapFn) {
     return Object.keys(object).reduce(function(result, key) {
@@ -42,4 +45,8 @@ function getMonitor(id) {
 
 function getFocusedWindow() {
     return global.screen.get_active_workspace().list_windows().filter(win => win.has_focus())[0];
+}
+
+function isTileable(win) {
+    return Ext.settings.get_strv('auto-tile-window-types').some(t => win.window_type === Meta.WindowType[t]);
 }

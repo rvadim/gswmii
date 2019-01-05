@@ -26,7 +26,7 @@ let _handle_settings;
 let _handle_screen;
 let _handle_wm_map;
 let _handle_wm_destroy;
-let _handle_wm_switch_ws;
+// let _handle_wm_switch_ws;
 
 function enable() {
     Tests.runTests();
@@ -37,9 +37,9 @@ function enable() {
     _handle_screen = global.screen.connect('restacked', function() {
         MyMain.update();
     });
-    _handle_wm_switch_ws = global.window_manager.connect('switch-workspace', function() {
-        MyMain.update();
-    });
+    // _handle_wm_switch_ws = global.window_manager.connect('switch-workspace', function() {
+    //     MyMain.update();
+    // });
     _handle_wm_map = global.window_manager.connect('map', (g, w) => {
         // MyMain.update();
     });
@@ -58,10 +58,9 @@ function disable() {
     global.screen.disconnect(_handle_screen);
     global.window_manager.disconnect(_handle_wm_map);
     global.window_manager.disconnect(_handle_wm_destroy);
-    global.window_manager.disconnect(_handle_wm_switch_ws);
+    // global.window_manager.disconnect(_handle_wm_switch_ws);
 
     disableKeybindings();
-
 }
 
 function enableKeybindings() {

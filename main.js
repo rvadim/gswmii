@@ -9,6 +9,7 @@ const Handlers = Me.imports.handlers;
 let structure = new Models.Structure();
 const COLUMNS_LIMIT = 2;
 
+// const scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
 
 async function update(win=false) {
     let newStruct = build(win);
@@ -47,7 +48,9 @@ function build(win=false) {
     for (let i = 0; i < ws_count; i++) {
         let ws = global.screen.get_workspace_by_index(i);
         for (let win of ws.list_windows()) {
-            struct[win.get_stable_sequence()] = new Models.Window(win);
+            if (Utils.isTileable(win)) {
+                struct[win.get_stable_sequence()] = new Models.Window(win);
+            }
         }
     }
     if (win !== false) {
@@ -57,31 +60,30 @@ function build(win=false) {
 }
 
 function retileScreen(ws_id, mon_id) {
-    // Utils.log(`Retile ws ${ws_id}, mon ${mon_id}`);
-    let top_height = 25;        // TODO get from original window
+    let wa = global.screen.get_workspace_by_index(ws_id).get_work_area_for_monitor(mon_id);
     let columns = structure.getColumns(ws_id, mon_id);
-    let monitor = Utils.getMonitor(mon_id);
     if (columns.length === 0) {
         return;
-    } else if (columns.length === 1 && columns[0].length === 1) {
+    }
+    if (columns.length === 1 && columns[0].length === 1) {
         let win = columns[0][0].ref;
         win.maximize(Meta.MaximizeFlags.BOTH);
         return;
     }
     let columns_count = columns.length;
-    let column_width = Math.floor(monitor.width / columns_count);
+    let column_width = Math.floor(wa.width / columns_count);
     let col_id = 0;
     for (let column of columns) {
         let windows_count = column.length;
-        let row_height = Math.floor((monitor.height - top_height) / windows_count);
+        let row_height = Math.floor(wa.height / windows_count);
         let win_id = 0;
         for (let win of column) {
             win.ref.unmaximize(Meta.MaximizeFlags.BOTH);
             win.ref.move_resize_frame(false,
-                (col_id * column_width),                // x
-                (win_id * row_height) + top_height,     // y
-                column_width - 10,                       // width
-                row_height - 10);                        // height
+                (col_id * column_width) + wa.x,         // x
+                (win_id * row_height) + wa.y,           // y
+                column_width,                           // width
+                row_height);                            // height
             win_id++;
         }
         col_id++;
