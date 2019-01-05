@@ -186,6 +186,26 @@ class Structure {
         }
     }
 
+    getTopWindow(win) {
+        if (win.in_col_id === 0) {
+            return win;
+        }
+        let windows = this.getColumnNeighbors(win);
+        return windows.filter((w) => w.in_col_id === win.in_col_id - 1)[0];
+    }
+
+    getBottomWindow(win) {
+        let windows = this.getColumnNeighbors(win);
+        if (windows.length <= 1) {
+            return win;
+        }
+        let maxRow = Math.max(...windows.map((w) => w.in_col_id))
+        if (win.in_col_id === maxRow) {
+            return win;
+        }
+        return windows.filter((w) => w.in_col_id === win.in_col_id + 1)[0];
+    }
+
     // reorderWindowColumn(win) {
     //     let windows = this.getColumnNeighbors(win);
     //     // Utils.log("reorder windows", windows.map((w) => `${w.id}:${w.col_id}:${w.in_col_id}`));

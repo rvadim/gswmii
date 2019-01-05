@@ -88,6 +88,12 @@ function enableKeybindings() {
     addKeybinding('move-window-left', () => {
         MyMain.move_window_left();
     });
+    addKeybinding('move-window-up', () => {
+        MyMain.move_window_up();
+    });
+    addKeybinding('move-window-down', () => {
+        MyMain.move_window_down();
+    });
 }
 
 function disableKeybindings() {
@@ -95,6 +101,8 @@ function disableKeybindings() {
     Main.wm.removeKeybinding('switch-focus-up');
     Main.wm.removeKeybinding('move-window-left');
     Main.wm.removeKeybinding('move-window-right');
+    Main.wm.removeKeybinding('move-window-up');
+    Main.wm.removeKeybinding('move-window-down');
     Main.wm.removeKeybinding('switch-focus-right');
     Main.wm.removeKeybinding('switch-focus-left');
     // Main.wm.removeKeybinding('switch-default-layout');

@@ -119,6 +119,16 @@
       <summary>Switch focus up</summary>
       <description>Switch focus up</description>
     </key>
+    <key name="move-window-up" type="as">
+      <default>['&lt;Mod1&gt;&lt;Shift&gt;k']</default>
+      <summary>Move window up</summary>
+      <description>Move window up</description>
+    </key>
+    <key name="move-window-down" type="as">
+      <default>['&lt;Mod1&gt;&lt;Shift&gt;j']</default>
+      <summary>Move window down</summary>
+      <description>Move window down</description>
+    </key>
 
     <key name="toggle-tile" type="as">
       <default>['&lt;Super&gt;x']</default>

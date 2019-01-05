@@ -37,8 +37,36 @@ function windowDeleted(window, struct, new_struct) {
     struct.reorderScreen(window.ws_id, window.mon_id);
 }
 
-function setRow(old, win, struct, newStruct) {
+async function setRow(old, win, struct, newStruct) {
+    if (win.in_col_id < old.in_col_id) {
+        await movingUp(old, win, struct);
+    } else {
+        await movingDown(old, win, struct);
+    }
+}
 
+async function movingUp(old, win, struct) {
+    if (old.in_col_id === 0) {
+        Utils.log('This is first row, moving up not available, skipping...');
+        return;
+    }
+    let prev = struct.getTopWindow(old);
+    if (prev.id === win.id) {
+        return;
+    }
+    prev.in_col_id += 1;
+    struct.setWindow(prev);
+    struct.setWindow(win);
+}
+
+async function movingDown(old, win, struct) {
+    let prev = struct.getBottomWindow(old);
+    if (prev.id === win.id) {
+        return;
+    }
+    prev.in_col_id -= 1;
+    struct.setWindow(prev);
+    struct.setWindow(win);
 }
 
 async function setColumn(old, win, struct, newStruct=null) {

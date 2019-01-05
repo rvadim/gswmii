@@ -112,7 +112,6 @@ function switch_focus_right() {
     structure.getRightWindow(win).ref.focus(global.get_current_time());
 }
 
-
 function move_window_right() {
     let win = structure.getWindow(Utils.getFocusedWindow().get_stable_sequence());
     let newWin = win.copy();
@@ -124,5 +123,19 @@ function move_window_left() {
     let win = structure.getWindow(Utils.getFocusedWindow().get_stable_sequence());
     let newWin = win.copy();
     newWin.col_id -= 1;
+    update(newWin);
+}
+
+function move_window_up() {
+    let win = structure.getWindow(Utils.getFocusedWindow().get_stable_sequence());
+    let newWin = win.copy();
+    newWin.in_col_id -= 1;
+    update(newWin);
+}
+
+function move_window_down() {
+    let win = structure.getWindow(Utils.getFocusedWindow().get_stable_sequence());
+    let newWin = win.copy();
+    newWin.in_col_id += 1;
     update(newWin);
 }
