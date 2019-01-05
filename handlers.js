@@ -3,6 +3,12 @@ const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Utils = Me.imports.utils;
 const MyMain = Me.imports.main;
 
+let maxColumns = 2;
+
+function setMaxColumns(n) {
+    maxColumns = n;
+}
+
 function windowCreated(window, struct, new_data) {
     // Utils.log("Window creating...", window.id);
     //let columns = new_struct.getWindowsByColumns(window.ws_id, window.mon_id);
@@ -95,8 +101,8 @@ async function movingRight(old, win, struct) {
         Utils.log('Warning', 'this is last window column, moving right not available, skipping...');
         return;
     }
-    if (win.col_id === MyMain.COLUMNS_LIMIT) {
-        Utils.log('Warning', `more then ${MyMain.COLUMNS_LIMIT} columns not allowed`);
+    if (win.col_id === maxColumns) {
+        Utils.log('Warning', `more then ${maxColumns} columns not allowed`);
         return;
     }
 

@@ -6,6 +6,7 @@ const St = imports.gi.St;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const MyMain = Me.imports.main;
 const Tests = Me.imports.tests;
+const Utils = Me.imports.utils;
 
 const SchemaSource = Gio.SettingsSchemaSource.new_from_directory(
     Me.dir.get_path(), Gio.SettingsSchemaSource.get_default(), false);
@@ -32,8 +33,10 @@ function enable() {
     Tests.runTests();
 
     _handle_settings = settings.connect('changed', function() {
+        MyMain.handleSettings();
         MyMain.update();
     });
+
     _handle_screen = global.screen.connect('restacked', function() {
         MyMain.update();
     });
@@ -47,6 +50,7 @@ function enable() {
         // ROLLBACK remove_window(w.meta_window);
     });
     enableKeybindings();
+    MyMain.handleSettings();
 
     MyMain.update();
 }

@@ -1,17 +1,5 @@
 <schemalist>
   <schema id="org.gnome.shell.extensions.gswmii" path="/org/gnome/shell/extensions/gswmii/">
-    <key name="layouts" type="as">
-      <choices>
-        <choice value='horizontal'/>
-        <choice value='vertical'/>
-        <choice value='spiral'/>
-      </choices>
-      <default>['horizontal', 'vertical', 'spiral']</default>
-      <summary>Layouts</summary>
-      <description>
-        The order of available layouts.
-      </description>
-    </key>
     <key name="auto-tile-window-types" type="as">
       <default>['NORMAL']</default>
       <summary>Auto Tile Window Types</summary>
@@ -19,19 +7,12 @@
         Automatically tile windows of the specified types at creation.
       </description>
     </key>
-    <key name="maximize-single" type="b">
-      <default>true</default>
-      <summary>Maximize Single</summary>
+    <key name="max-columns" type="u">
+      <range min="1" max="5"/>
+      <default>2</default>
+      <summary>Columns max number</summary>
       <description>
-        Whether to maximize lone windows instead of tiling.
-      </description>
-    </key>
-    <key name="master-count" type="u">
-      <range min="1"/>
-      <default>1</default>
-      <summary>Master Count</summary>
-      <description>
-        The master tile count.
+          Max number of the columns
       </description>
     </key>
     <key name="split-ratio" type="d">
@@ -42,35 +23,11 @@
         The screen ratio for which windows are split.
       </description>
     </key>
-    <key name="split-ratio-step" type="d">
-      <range min="0.0" max="0.40"/>
-      <default>0.050</default>
-      <summary>Split Ratio Step</summary>
-      <description>
-        The ratio at which the split ratio is increased or decreased.
-      </description>
-    </key>
     <key name="margins" type="(iiii)">
       <default>(0, 0, 0, 0)</default>
       <summary>Margins</summary>
       <description>
         The margins in pixels to add to the screen's x, y, width and height.
-      </description>
-    </key>
-    <key name="minimum-gaps" type="(iiii)">
-      <default>(0, 0, 0, 0)</default>
-      <summary>Minimum Gaps</summary>
-      <description>
-        The minimum amount of pixels to randomly gap windows' x, y, width and
-        height with.
-      </description>
-    </key>
-    <key name="maximum-gaps" type="(iiii)">
-      <default>(0, 0, 0, 0)</default>
-      <summary>Maximum Gaps</summary>
-      <description>
-        The maximum amount of pixels to randomly gap windows' x, y, width and
-        height with.
       </description>
     </key>
   </schema>

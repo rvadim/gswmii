@@ -8,15 +8,16 @@ const Handlers = Me.imports.handlers;
 const Ext = Me.imports.extension;
 
 let structure = new Models.Structure();
-const COLUMNS_LIMIT = 2;
 
-let splitRatio = 0.5;
+let splitRatio = 0.5; //Ext.settings.get_value('split-ratio');;
 
-// const scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
 
-function settingsChanged() {
-   // Ext.settings.get_
+function handleSettings() {
+    splitRatio = Ext.settings.get_double('split-ratio');
+    Handlers.setMaxColumns(Ext.settings.get_uint('max-columns'));
+    Utils.log("handleSettings", splitRatio, maxColumns);
 }
+// const scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
 
 async function update(win=false) {
     let newStruct = build(win);
