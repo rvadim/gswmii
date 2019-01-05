@@ -1,5 +1,6 @@
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Models = Me.imports.models;
+const Handlers = Me.imports.handlers;
 const Utils = Me.imports.utils;
 
 
@@ -10,22 +11,25 @@ class TestCase {
 
     assertEqual(actual, expected, message = '') {
         if (Object.prototype.toString.call(actual) === '[object Array]') {
-            // Utils.log(`${JSON.stringify(actual)} !== ${JSON.stringify(expected)}`);
             if (!actual.every((e) => expected.includes(e)) || !expected.every((e) => actual.includes(e))) {
                 this.errors.push(
                     new Error(`actual: ${JSON.stringify(actual)} !== expected ${JSON.stringify(expected)}, ${message}`));
             }
-        } else if (actual !== expected) {
-            this.errors.push(
+        } else {
+            if (actual !== expected) {
+                this.errors.push(
                     new Error(`actual: ${JSON.stringify(actual)} !== expected ${JSON.stringify(expected)}, ${message}`));
+            }
         }
     }
 }
 
 function runTests() {
+    Utils.log("Run tests");
     let suites = [
         TestStructure,
-        TestWindow
+        TestWindow,
+        TestHandlers,
     ];
     for (let suite of suites) {
         let s = new suite();
@@ -150,7 +154,7 @@ class TestStructure extends TestCase {
         this.assertEqual(output, [null, null]);
         s = new Models.Structure();
         output = s.map((w) => w.in_col_id);
-        this.assertEqual(output, []);
+        this.assertEqual(output, [], 'Map of new structure should return empty array');
     }
     testGetMaxColID() {
         let s = this.createFixture1();
@@ -162,22 +166,25 @@ class TestStructure extends TestCase {
     testAddWindow() {
         let s = new Models.Structure();
         this.assertEqual(s.hasWindow(1), false);
-        s.addWindow(new Models.Window(new WindowMock(1))).then(() => this.assertEqual(s.hasWindow(1), true));
+        s.addWindow(new Models.Window(new WindowMock(1)));
+        this.assertEqual(s.hasWindow(1), true);
     }
     testSetWindow() {
         let s = new Models.Structure();
-        s.addWindow(new Models.Window(new WindowMock(1))).then(() => this.assertEqual(s.getWindow(1).ws_id, 0));
-        s.setWindow(new Models.Window(new WindowMock(1, 1))).then(function () {
+        s.addWindow(new Models.Window(new WindowMock(1)));
+        this.assertEqual(s.getWindow(1).ws_id, 0);
+        s.setWindow(new Models.Window(new WindowMock(1, 1)));
             this.assertEqual(s.getWindow(1).ws_id, 1);
             this.assertEqual(s.map((w) => w.id), [1]);
-        });
-
     }
     testDeleteWindow() {
         let s = new Models.Structure();
         s.addWindow(new Models.Window(new WindowMock(1)));
         this.assertEqual(s.map((w) => w.id), [1]);
-        s.deleteWindow(1).then(() => this.assertEqual(s.map((w) => w.id), []));
+        s.deleteWindow(1).then(function () {
+            this.assertEqual(s.map((w) => w.id), []);
+        });
+
     }
     testGetWindows() {
         let s = this.createFixture1();
@@ -252,5 +259,62 @@ class TestStructure extends TestCase {
         this.assertEqual(s.getRightWindow(s.getWindow(3)).id, 4);
         this.assertEqual(s.getRightWindow(s.getWindow(4)).id, 5);
         this.assertEqual(s.getRightWindow(s.getWindow(5)).id, 5);
+    }
+}
+
+class TestHandlers extends TestCase {
+    testMovingRight() {
+        let s = new Models.Structure();
+        let win1 = new Models.Window(new WindowMock(1));
+        win1.col_id = 0;
+        win1.in_col_id = 0;
+        s.addWindow(win1);
+        let win2 = win1.copy();
+        win2.col_id = 1;
+        Handlers.setColumn(win1, win2, s);
+        this.assertEqual(s.getWindow(1).col_id, 0);
+
+        win2 = new Models.Window(new WindowMock(2));
+        win2.col_id = 0;
+        win2.in_col_id = 1;
+        let win3 = new Models.Window(new WindowMock(3));
+        win3.col_id = 0;
+        win3.in_col_id = 2;
+        s.addWindow(win3);
+        s.addWindow(win2);
+        let win2c = win2.copy();
+        win2c.col_id = 1;
+
+        Handlers.setColumn(win2, win2c, s);
+        this.assertEqual(s.getWindow(1).col_id, 0);
+        this.assertEqual(s.getWindow(1).in_col_id, 0);
+        this.assertEqual(s.getWindow(2).col_id, 1);
+        this.assertEqual(s.getWindow(2).in_col_id, 0);
+        this.assertEqual(s.getWindow(3).col_id, 0);
+        this.assertEqual(s.getWindow(3).in_col_id, 1);
+
+    }
+    testMovingLeft() {
+        let s = new Models.Structure();
+        let win1 = new Models.Window(new WindowMock(1));
+        win1.col_id = 0;
+        win1.in_col_id = 0;
+        s.addWindow(win1);
+        let win1c = win1.copy();
+        win1c.col_id = -1;
+        Handlers.setColumn(win1, win1c, s);
+        this.assertEqual(s.getWindow(1).col_id, 0);
+
+        let win2 = new Models.Window(new WindowMock(2));
+        win2.col_id = 1;
+        win2.in_col_id = 0;
+        s.addWindow(win2);
+        let win2c = win2.copy();
+        win2c.col_id = 0;
+        Handlers.setColumn(win2, win2c, s);
+        this.assertEqual(s.getWindow(1).col_id, 0, 'First window column should be 0');
+        this.assertEqual(s.getWindow(1).in_col_id, 0, 'First window row should be 0');
+        this.assertEqual(s.getWindow(2).col_id, 0, 'Second window column should be 0');
+        this.assertEqual(s.getWindow(2).in_col_id, 1, 'Second window row should be 1');
     }
 }

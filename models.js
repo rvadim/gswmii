@@ -41,23 +41,16 @@ class Structure {
     }
 
     addWindow(win) {
-        return new Promise((resolve, reject) => {
         // Utils.log("Structure", this.uuid, "add window", win.id);
-            this.windows[win.id] = win;
-            resolve();
-        });
+        this.windows[win.id] = win;
     }
 
     setWindow(win) {
-        return new Promise((resolve, reject) => {
-            this.windows[win.id] = win;
-        });
+        this.windows[win.id] = win;
     }
 
-    deleteWindow(win) {
-        return new Promise((resolve, reject) => {
-            delete this.windows[win.id];
-        });
+    async deleteWindow(win) {
+        delete this.windows[win.id];
     }
 
     getWindow(id) {
@@ -167,7 +160,7 @@ class Structure {
 
     getLeftWindow(win) {
         if (win.col_id === 0) {
-            return win
+            return win;
         }
         let windows = this.getColumns(win.ws_id, win.mon_id)[win.col_id-1];
         let in_col_id = closest(win.in_col_id, windows.map((w) => w.in_col_id));
@@ -191,6 +184,42 @@ class Structure {
         } else {
             return wins[0];
         }
+    }
+
+    // reorderWindowColumn(win) {
+    //     let windows = this.getColumnNeighbors(win);
+    //     // Utils.log("reorder windows", windows.map((w) => `${w.id}:${w.col_id}:${w.in_col_id}`));
+    //     let sorted = windows.sort((a, b) => a.in_col_id - b.in_col_id);
+    //     for (let i = 0; i < sorted.length; i++) {
+    //         sorted[i].in_col_id = i;
+    //     }
+    // }
+
+    reorderScreen(ws_id, mon_id) {
+        let columns = this.groupBy(['ws_id', 'mon_id', 'col_id']);
+        for (let i in columns) {
+            if (columns.hasOwnProperty(i)) {
+                let sorted = columns[i].filter((w) => w !== null).sort((a, b) => a.in_col_id - b.in_col_id);
+                for (let i = 0; i < sorted.length; i++) {
+                    sorted[i].in_col_id = i;
+                }
+            }
+        }
+    }
+
+    groupBy(keys) {
+        let output = {};
+        for (let i in this.windows) {
+            if (this.windows.hasOwnProperty(i)) {
+                let win = this.windows[i];
+                let winKey = keys.map((k) => win[k]).join('.');
+                if (!output.hasOwnProperty(winKey)) {
+                    output[winKey] = [];
+                }
+                output[winKey].push(win);
+            }
+        }
+        return output;
     }
 }
 

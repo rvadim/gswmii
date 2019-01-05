@@ -7,9 +7,10 @@ const Models = Me.imports.models;
 const Handlers = Me.imports.handlers;
 
 let structure = new Models.Structure();
+const COLUMNS_LIMIT = 2;
 
 
-function update(win=false) {
+async function update(win=false) {
     let newStruct = build(win);
     for (let i in structure.windows) {
         if (structure.hasWindow(i)) {
@@ -25,9 +26,15 @@ function update(win=false) {
         if (newStruct.hasOwnProperty(i)) {
             let newWin = newStruct[i];
             if (!structure.hasWindow(i)) {
-                Handlers.windowCreated(newWin, structure, newStruct);
+                await Handlers.windowCreated(newWin, structure, newStruct);
             } else if (newWin.col_id !== null && !structure.getWindow(i).equal(newWin)) {
-                Handlers.windowUpdated(structure.getWindow(i), newWin, structure, newStruct);
+                let oldWin = structure.getWindow(i);
+                if (oldWin.col_id !== newWin.col_id) {
+                    await Handlers.setColumn(oldWin, newWin, structure, newStruct);
+                } else if (oldWin.in_col_id !== newWin.in_col_id) {
+                    await Handlers.setRow(oldWin, newWin, structure, newStruct);
+                }
+                // Handlers.windowUpdated(structure.getWindow(i), newWin, structure, newStruct);
             }
             retileScreen(newWin.ws_id, newWin.mon_id);
         }
@@ -73,8 +80,8 @@ function retileScreen(ws_id, mon_id) {
             win.ref.move_resize_frame(false,
                 (col_id * column_width),                // x
                 (win_id * row_height) + top_height,     // y
-                column_width - 2,                       // width
-                row_height - 2);                        // height
+                column_width - 10,                       // width
+                row_height - 10);                        // height
             win_id++;
         }
         col_id++;
