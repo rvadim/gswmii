@@ -5,11 +5,18 @@ const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Utils = Me.imports.utils;
 const Models = Me.imports.models;
 const Handlers = Me.imports.handlers;
+const Ext = Me.imports.extension;
 
 let structure = new Models.Structure();
 const COLUMNS_LIMIT = 2;
 
+let splitRatio = 0.5;
+
 // const scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
+
+function settingsChanged() {
+   // Ext.settings.get_
+}
 
 async function update(win=false) {
     let newStruct = build(win);
@@ -70,23 +77,23 @@ function retileScreen(ws_id, mon_id) {
         win.maximize(Meta.MaximizeFlags.BOTH);
         return;
     }
-    let columns_count = columns.length;
-    let column_width = Math.floor(wa.width / columns_count);
-    let col_id = 0;
-    for (let column of columns) {
-        let windows_count = column.length;
-        let row_height = Math.floor(wa.height / windows_count);
-        let win_id = 0;
-        for (let win of column) {
+    let cx = wa.x;
+    let column_width = Math.floor(wa.width / columns.length);
+    for (let i=0; i < columns.length; i++) {
+        let row_height = Math.floor(wa.height / columns[i].length);
+        if (columns.length > 1) {
+            column_width = Math.floor(wa.width * (i === 0 ? splitRatio : (1 - splitRatio)));
+        }
+        for (let w = 0; w < columns[i].length; w++) {
+            let win = columns[i][w];
             win.ref.unmaximize(Meta.MaximizeFlags.BOTH);
             win.ref.move_resize_frame(false,
-                (col_id * column_width) + wa.x,         // x
-                (win_id * row_height) + wa.y,           // y
+                cx,         // x
+                (w * row_height) + wa.y,           // y
                 column_width,                           // width
                 row_height);                            // height
-            win_id++;
         }
-        col_id++;
+        cx += column_width;
     }
 }
 
