@@ -7,6 +7,7 @@ const Me = imports.misc.extensionUtils.getCurrentExtension();
 const MyMain = Me.imports.main;
 const Tests = Me.imports.tests;
 const Utils = Me.imports.utils;
+const Focus = Me.imports.focus;
 
 const SchemaSource = Gio.SettingsSchemaSource.new_from_directory(
     Me.dir.get_path(), Gio.SettingsSchemaSource.get_default(), false);
@@ -27,11 +28,13 @@ let _handle_settings;
 let _handle_screen;
 let _handle_wm_map;
 let _handle_wm_destroy;
+let _handle_window_focus;
 // let _handle_wm_switch_ws;
 
 function enable() {
     Tests.runTests();
 
+    _handle_window_focus = global.display.connect('notify::focus-window', Focus.onChange);
     _handle_settings = settings.connect('changed', function() {
         MyMain.handleSettings();
         MyMain.update();
@@ -62,6 +65,7 @@ function disable() {
     global.screen.disconnect(_handle_screen);
     global.window_manager.disconnect(_handle_wm_map);
     global.window_manager.disconnect(_handle_wm_destroy);
+    global.disploy.diconnect(_handle_window_focus);
     // global.window_manager.disconnect(_handle_wm_switch_ws);
 
     disableKeybindings();

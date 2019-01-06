@@ -2,6 +2,7 @@ const Main = imports.ui.main;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Utils = Me.imports.utils;
 const MyMain = Me.imports.main;
+const Focus = Me.imports.focus;
 
 let maxColumns = 2;
 
@@ -9,31 +10,21 @@ function setMaxColumns(n) {
     maxColumns = n;
 }
 
-function windowCreated(window, struct, new_data) {
-    // Utils.log("Window creating...", window.id);
-    //let columns = new_struct.getWindowsByColumns(window.ws_id, window.mon_id);
-    //let windows = new_struct.getWindows(window.ws_id, window.mon_id);
-    // skip, get selected window
-    // get it col_id
-    // get put new window to col
-    //let fID = Utils.getFocusedWindow().get_stable_sequence();
-    //Utils.log("fID", fID);
-    //let fWin = struct.getWindow(fID);
+function windowCreated(window, struct, newStruct=null) {
+    let prevID = Focus.getPreviousWindowID();
+    if (prevID !== null) {
+        let prevWin = struct.getWindow(prevID);
+        if (prevWin.ws_id === window.ws_id && prevWin.mon_id === window.mon_id) {
+            window.col_id = prevWin.col_id;
+            window.in_col_id = prevWin.in_col_id;
+            struct.addWindow(window);
+            struct.reorderScreen(window.ws_id, window.mon_id);
+            return;
+        }
+    }
+
     window.col_id = 0;
-    let windows = struct.getColumnNeighbors(window);
-    window.in_col_id = windows.length;
-    // if (windows.length > 0) {
-    //     window.in_col_id = windows.length;
-    //     // for (let i = 0; i < windows.length; i++) {
-    //     //     if (fWin.in_col_id < windows[i].in_col_id) {
-    //     //         windows[i].in_col_id = i + 1;
-    //     //     }
-    //     // }
-    // } else {
-    //     window.in_col_id = 0;
-    // }
-    // struct.addWindow(window);
-    //retileScreen(window.ws_id, window.mon_id, Utils.getMonitor(window.mon_id));
+    window.in_col_id = struct.getColumnNeighbors(window).length;
     struct.addWindow(window);
     Utils.log("Window created", window.id);
 }

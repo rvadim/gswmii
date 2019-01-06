@@ -11,11 +11,9 @@ let structure = new Models.Structure();
 
 let splitRatio = 0.5; //Ext.settings.get_value('split-ratio');;
 
-
 function handleSettings() {
     splitRatio = Ext.settings.get_double('split-ratio');
     Handlers.setMaxColumns(Ext.settings.get_uint('max-columns'));
-    Utils.log("handleSettings", splitRatio, maxColumns);
 }
 // const scaleFactor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
 
