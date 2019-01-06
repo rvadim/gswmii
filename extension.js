@@ -43,9 +43,11 @@ function enable() {
     _handle_screen = global.screen.connect('restacked', function() {
         MyMain.update();
     });
-    // _handle_wm_switch_ws = global.window_manager.connect('switch-workspace', function() {
-    //     MyMain.update();
-    // });
+
+    _handle_wm_switch_ws = global.window_manager.connect('switch-workspace', function() {
+        MyMain.update();
+    });
+
     _handle_wm_map = global.window_manager.connect('map', (g, w) => {
         // MyMain.update();
     });
@@ -102,6 +104,11 @@ function enableKeybindings() {
     addKeybinding('move-window-down', () => {
         MyMain.move_window_down();
     });
+    for (let i = 0; i < 9; i++) {
+        addKeybinding(`move-window-to-ws-${i + 1}`, () => {
+            MyMain.move_window_to_ws(i);
+        });
+    }
 }
 
 function disableKeybindings() {
@@ -113,6 +120,9 @@ function disableKeybindings() {
     Main.wm.removeKeybinding('move-window-down');
     Main.wm.removeKeybinding('switch-focus-right');
     Main.wm.removeKeybinding('switch-focus-left');
+    for (let i = 0; i < 9; i++) {
+        Main.wm.removeKeybinding(`move-window-to-ws-${i + 1}`);
+    }
     // Main.wm.removeKeybinding('switch-default-layout');
     // Main.wm.removeKeybinding('switch-stacked-layout');
 }

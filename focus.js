@@ -5,11 +5,11 @@ let previous = null;
 let current = null;
 
 function onChange() {
-    let id = global.display.focusWindow.get_stable_sequence();
-    previous = current;
-    current = id;
-    Utils.log('Foxus changed to window id', getCurrentWindowID());
-    Utils.log('Previous focused window', getPreviousWindowID());
+    if (global.display.focusWindow !== null) {
+        let id = global.display.focusWindow.get_stable_sequence();
+        previous = current;
+        current = id;
+    }
 }
 
 function getPreviousWindowID() {

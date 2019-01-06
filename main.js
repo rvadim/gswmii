@@ -40,8 +40,9 @@ async function update(win=false) {
                     await Handlers.setColumn(oldWin, newWin, structure, newStruct);
                 } else if (oldWin.in_col_id !== newWin.in_col_id) {
                     await Handlers.setRow(oldWin, newWin, structure, newStruct);
+                } else if (oldWin.ws_id !== newWin.ws_id) {
+                    await Handlers.setWorkspace(oldWin, newWin, structure, newStruct);
                 }
-                // Handlers.windowUpdated(structure.getWindow(i), newWin, structure, newStruct);
             }
             retileScreen(newWin.ws_id, newWin.mon_id);
         }
@@ -143,5 +144,12 @@ function move_window_down() {
     let win = structure.getWindow(Utils.getFocusedWindow().get_stable_sequence());
     let newWin = win.copy();
     newWin.in_col_id += 1;
+    update(newWin);
+}
+
+function move_window_to_ws(id) {
+    let win = structure.getWindow(Utils.getFocusedWindow().get_stable_sequence());
+    let newWin = win.copy();
+    newWin.ws_id = id;
     update(newWin);
 }

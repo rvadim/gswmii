@@ -122,3 +122,19 @@ async function movingRight(old, win, struct) {
     //
     // struct.setWindow(win);
 }
+
+function setWorkspace(oldWin, newWin, struct, newStruct) {
+    let columns = struct.getColumns(newWin.ws_id, newWin.mon_id);
+    if (newWin.col_id > columns.length) {
+        newWin.col_id = columns.length;
+        newWin.in_col_id = 0;
+    }
+    struct.setWindow(newWin);
+    Utils.log(newWin.ref.get_workspace().index());
+    Utils.log(newWin.ws_id);
+    let newWS = global.screen.get_workspace_by_index(newWin.ws_id);
+    Utils.log('New id', newWS.index());
+    newWin.ref.change_workspace(newWS);
+    struct.reorderScreen(oldWin.ws_id, oldWin.mon_id);
+    struct.reorderScreen(newWin.ws_id, newWin.mon_id);
+}
