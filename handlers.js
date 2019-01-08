@@ -115,7 +115,6 @@ async function movingLeft(old, win, struct) {
         let in_col_id = Models.closest(win.in_col_id,
             windows.filter((w) => win.in_col_id !== w.in_col_id ).map((w) => w.in_col_id));
         let right = windows.filter((w) => w.in_col_id === in_col_id)[0];
-        Utils.log(right.id);
         right.active = true;
         let left = struct.getLeftWindow(old);
         win.stacked = false;
@@ -164,7 +163,6 @@ async function movingRight(old, win, struct) {
         win.stacked = struct.getRightWindow(old).stacked;
         win.active = win.stacked;
     }
-    MyMain.logWindow(win, 'Result');
     struct.setWindow(win);
 
     await struct.reorderScreen(win.ws_id, win.mon_id);
