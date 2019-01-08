@@ -9,6 +9,8 @@ class Window {
         this.mon_id = window.get_monitor();
         this.col_id = null;
         this.in_col_id = null;
+        this.stacked = false;
+        this.active = false;
     }
 
     equal(win) {
@@ -64,11 +66,12 @@ class Structure {
         return this.windows.hasOwnProperty(id);
     }
 
-    getMaxColID() {
+    getMaxColID(ws_id, mon_id) {
         let l = this.map((w) => w.col_id);
         if (l.length === 0) {
             return 0;
         }
+        l.filter((w) => w.ws_id === ws_id && w.mon_id === mon_id);
         return Math.max(...l);
     }
 
@@ -173,7 +176,7 @@ class Structure {
     }
 
     getRightWindow(win) {
-        if (win.col_id === this.getMaxColID()) {
+        if (win.col_id === this.getMaxColID(win.ws_id, win.mon_id)) {
             return win
         }
         let windows = this.getColumns(win.ws_id, win.mon_id)[win.col_id+1];

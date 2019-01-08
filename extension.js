@@ -12,7 +12,7 @@ const Focus = Me.imports.focus;
 const SchemaSource = Gio.SettingsSchemaSource.new_from_directory(
     Me.dir.get_path(), Gio.SettingsSchemaSource.get_default(), false);
 
-const settings = new Gio.Settings({
+let settings = new Gio.Settings({
     settings_schema: SchemaSource.lookup(Me.metadata['settings-schema'], true)
 });
 
@@ -26,8 +26,8 @@ function addKeybinding(name, handler) {
 
 let _handle_settings;
 let _handle_screen;
-let _handle_wm_map;
-let _handle_wm_destroy;
+// let _handle_wm_map;
+// let _handle_wm_destroy;
 let _handle_window_focus;
 // let _handle_wm_switch_ws;
 
@@ -44,16 +44,17 @@ function enable() {
         MyMain.update();
     });
 
-    _handle_wm_switch_ws = global.window_manager.connect('switch-workspace', function() {
-        MyMain.update();
-    });
+    // _handle_wm_switch_ws = global.window_manager.connect('switch-workspace', function() {
+    //     MyMain.update();
+    // });
 
-    _handle_wm_map = global.window_manager.connect('map', (g, w) => {
+    // _handle_wm_map = global.window_manager.connect('map', (g, w) => {
         // MyMain.update();
-    });
-    _handle_wm_destroy = global.window_manager.connect('destroy', (g, w) => {
-        // ROLLBACK remove_window(w.meta_window);
-    });
+    // });
+
+    // _handle_wm_destroy = global.window_manager.connect('destroy', (g, w) => {
+    //     // ROLLBACK remove_window(w.meta_window);
+    // });
     enableKeybindings();
     MyMain.handleSettings();
 
@@ -65,21 +66,21 @@ function init() {}
 function disable() {
     settings.disconnect(_handle_settings);
     global.screen.disconnect(_handle_screen);
-    global.window_manager.disconnect(_handle_wm_map);
-    global.window_manager.disconnect(_handle_wm_destroy);
-    global.disploy.diconnect(_handle_window_focus);
+    // global.window_manager.disconnect(_handle_wm_map);
+    // global.window_manager.disconnect(_handle_wm_destroy);
+    global.display.disconnect(_handle_window_focus);
     // global.window_manager.disconnect(_handle_wm_switch_ws);
 
     disableKeybindings();
 }
 
 function enableKeybindings() {
-    // addKeybinding('switch-default-layout', () => {
-    //     switch_default_layout();
-    // });
-    // addKeybinding('switch-stacked-layout', () => {
-    //     switch_stacked_layout();
-    // });
+    addKeybinding('switch-default-layout', () => {
+        MyMain.switch_default_layout();
+    });
+    addKeybinding('switch-stacked-layout', () => {
+        MyMain.switch_stacked_layout();
+    });
     addKeybinding('switch-focus-down', () => {
          MyMain.switch_focus_down();
     });
@@ -123,6 +124,6 @@ function disableKeybindings() {
     for (let i = 0; i < 9; i++) {
         Main.wm.removeKeybinding(`move-window-to-ws-${i + 1}`);
     }
-    // Main.wm.removeKeybinding('switch-default-layout');
-    // Main.wm.removeKeybinding('switch-stacked-layout');
+    Main.wm.removeKeybinding('switch-default-layout');
+    Main.wm.removeKeybinding('switch-stacked-layout');
 }

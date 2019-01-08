@@ -3,13 +3,6 @@ const Meta = imports.gi.Meta;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Ext = Me.imports.extension;
 
-function omap(object, mapFn) {
-    return Object.keys(object).reduce(function(result, key) {
-        result[key] = mapFn(key, object[key]);
-        return result
-    }, {})
-}
-
 function log(...args) {
     let output = 'gswmii:';
     for (let i = 0; i < args.length; i++) {
@@ -48,5 +41,6 @@ function getFocusedWindow() {
 }
 
 function isTileable(win) {
+    // log(win.window_type);
     return Ext.settings.get_strv('auto-tile-window-types').some(t => win.window_type === Meta.WindowType[t]);
 }

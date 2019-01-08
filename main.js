@@ -23,7 +23,6 @@ async function update(win=false) {
         if (structure.hasWindow(i)) {
             if (!newStruct.hasOwnProperty(i)) {
                 let win = structure.getWindow(i);
-                structure.deleteWindow(win);
                 Handlers.windowDeleted(win, structure, newStruct);
                 retileScreen(win.ws_id, win.mon_id);
             }
@@ -36,6 +35,11 @@ async function update(win=false) {
                 await Handlers.windowCreated(newWin, structure, newStruct);
             } else if (newWin.col_id !== null && !structure.getWindow(i).equal(newWin)) {
                 let oldWin = structure.getWindow(i);
+
+                if (oldWin.stacked) {
+                    newWin.stacked = true;
+                }
+
                 if (oldWin.col_id !== newWin.col_id) {
                     await Handlers.setColumn(oldWin, newWin, structure, newStruct);
                 } else if (oldWin.in_col_id !== newWin.in_col_id) {
@@ -73,8 +77,9 @@ function retileScreen(ws_id, mon_id) {
         return;
     }
     if (columns.length === 1 && columns[0].length === 1) {
-        let win = columns[0][0].ref;
-        win.maximize(Meta.MaximizeFlags.BOTH);
+        let win = columns[0][0];
+        win.ref.maximize(Meta.MaximizeFlags.BOTH);
+        // win.ref.move_resize_frame(false, wa.x, wa.y, wa.width, wa.height);
         return;
     }
     let cx = wa.x;
@@ -86,12 +91,27 @@ function retileScreen(ws_id, mon_id) {
         }
         for (let w = 0; w < columns[i].length; w++) {
             let win = columns[i][w];
-            win.ref.unmaximize(Meta.MaximizeFlags.BOTH);
-            win.ref.move_resize_frame(false,
-                cx,         // x
-                (w * row_height) + wa.y,           // y
-                column_width,                           // width
-                row_height);                            // height
+            if (win.stacked && win.active) {
+                win.ref.unminimize();
+                win.ref.unmaximize(Meta.MaximizeFlags.BOTH);
+                // win.ref.maximize(Meta.MaximizeFlags.BOTH);
+                win.ref.move_resize_frame(false,
+                    cx,
+                    wa.y,
+                    column_width,
+                    wa.height);
+            } else if (win.stacked && !win.active) {
+                win.ref.unmaximize(Meta.MaximizeFlags.BOTH);
+                win.ref.minimize();
+            } else {
+                win.ref.unminimize();
+                win.ref.unmaximize(Meta.MaximizeFlags.BOTH);
+                win.ref.move_resize_frame(false,
+                    cx,         // x
+                    (w * row_height) + wa.y,           // y
+                    column_width,                           // width
+                    row_height);                            // height
+            }
         }
         cx += column_width;
     }
@@ -101,22 +121,46 @@ function retileScreen(ws_id, mon_id) {
 
 function switch_focus_up() {
     let win = structure.getWindow(Utils.getFocusedWindow().get_stable_sequence());
-    structure.getPreviousInColumn(win).ref.focus(global.get_current_time());
+    win.active = false;
+    let prev = structure.getPreviousInColumn(win);
+    prev.active = true;
+    prev.ref.unminimize(); // Unminimize here due to unable focus minimized window
+    prev.ref.focus(global.get_current_time());
+    logWindow(prev);
+    retileScreen(win.ws_id, win.mon_id);
 }
 
 function switch_focus_down() {
     let win = structure.getWindow(Utils.getFocusedWindow().get_stable_sequence());
-    structure.getNextInColumn(win).ref.focus(global.get_current_time());
+    win.active = false;
+    let next = structure.getNextInColumn(win);
+    next.active = true;
+    next.ref.unminimize(); // Unminimize here due to unable focus minimized window
+    next.ref.focus(global.get_current_time());
+    logWindow(next);
+    retileScreen(win.ws_id, win.mon_id);
 }
 
 function switch_focus_left() {
     let win = structure.getWindow(Utils.getFocusedWindow().get_stable_sequence());
-    structure.getLeftWindow(win).ref.focus(global.get_current_time());
+    let left = structure.getLeftWindow(win);
+    if (left.stacked) {
+        let windows = structure.getColumnNeighbors(left);
+        left = windows.filter((w) => w.active)[0];
+    }
+    left.ref.focus(global.get_current_time());
+    logWindow(left);
 }
 
 function switch_focus_right() {
     let win = structure.getWindow(Utils.getFocusedWindow().get_stable_sequence());
-    structure.getRightWindow(win).ref.focus(global.get_current_time());
+    let right = structure.getRightWindow(win);
+    if (right.stacked) {
+        let windows = structure.getColumnNeighbors(right);
+        right = windows.filter((w) => w.active)[0];
+    }
+    right.ref.focus(global.get_current_time());
+    logWindow(right);
 }
 
 function move_window_right() {
@@ -152,4 +196,28 @@ function move_window_to_ws(id) {
     let newWin = win.copy();
     newWin.ws_id = id;
     update(newWin);
+}
+
+function switch_default_layout() {
+    let win = structure.getWindow(Utils.getFocusedWindow().get_stable_sequence());
+    win.active = false;
+    let windows = structure.getColumnNeighbors(win);
+    windows.map((w) => w.stacked = false)
+    retileScreen(win.ws_id, win.mon_id);
+}
+
+function switch_stacked_layout() {
+    let win = structure.getWindow(Utils.getFocusedWindow().get_stable_sequence());
+    win.active = true;
+    let windows = structure.getColumnNeighbors(win);
+    windows.map((w) => w.stacked = true)
+    retileScreen(win.ws_id, win.mon_id);
+}
+
+function logWindow(win, message=null) {
+    if (message === null) {
+        Utils.log(`Window id:${win.id}, title:${win.ref.title}, stacked:${win.stacked}, active:${win.active}`);
+    } else {
+        Utils.log(message, `window id:${win.id}, title:${win.ref.title}, stacked:${win.stacked}, active:${win.active}`);
+    }
 }
